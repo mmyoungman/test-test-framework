@@ -1,9 +1,14 @@
+# Created by Mark Youngman on 30 March 2018
+
 # TODO: 
 # Record test pass/fail data to produce a report
-# Have some way to run same test multiple times with different data?
+# Make test runner include/exclude specified tags
 # Record from what file a test was imported, so easier to find when it fails
+# Have some way to run same test multiple times with different data?
+# Record how long each test runs?
 
 from os import listdir
+from sys import exit
 
 # Test result types
 PASS = 0
@@ -29,9 +34,8 @@ testSuiteArray.append(testSuite("firstTestSuite", "firstTestSuite"))
 testSuiteArray.append(testSuite("anotherTestSuite", "anotherTestSuite"))
 
 for ts in testSuiteArray:
-    #print(type(ts))
     if not isinstance(ts, testSuite):
-        os.exit(1)
+        exit(1)
 
     # test decorator
     def test(*tags):
@@ -65,9 +69,6 @@ for ts in testSuiteArray:
         if filename.endswith('.py'):
             exec(open(ts.location + "/" + filename).read())
 
-    #print(ts.testArray)
-    #print(ts.testTagArray)
-    
     # Run the tests!
     print("Running Suite: " + ts.name)
     ts.beforeSuiteFunc()
@@ -75,12 +76,12 @@ for ts in testSuiteArray:
         ts.beforeTestFunc()
     
         if "happypath" in ts.testTagArray[i]:
-            print("Running Test: " + ts.testArray[i].__name__, end='... ')
+            print(("Running Test: " + ts.testArray[i].__name__).ljust(60, '.'), end='')
             result = ts.testArray[i]()
             if result == PASS:
-                print("PASSED!")
+                print("\033[92mPASSED!\033[0m")
             elif result == FAIL:
-                print("FAILED!")
+                print("\033[91mFAILED!\033[0m")
             else:
                 print("Something has gone seriously wrong!")
     
