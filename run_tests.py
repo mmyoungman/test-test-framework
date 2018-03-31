@@ -1,22 +1,24 @@
-import os
+# TODO: 
+# Record test pass/fail data to produce a report
+# Have some way to run same test multiple times with different data?
+# Record from what file a test was imported, so easier to find when it fails
+
+from os import listdir
 
 # Test result types
 PASS = 0
 FAIL = 1
 
 class testSuite:
-    name = ""
-    location = ""
-    testArray = []
-    testTagArray = []
-    beforeSuiteFunc = lambda *args: None
-    beforeTestFunc = lambda *args: None
-    afterTestFunc = lambda *args: None
-    afterSuiteFunc = lambda *args: None
-
     def __init__(self, suiteName, location):
         self.name = suiteName
         self.location = location
+        self.testArray = []
+        self.testTagArray = []
+        self.beforeSuiteFunc = lambda *args: None
+        self.beforeTestFunc = lambda *args: None
+        self.afterTestFunc = lambda *args: None
+        self.afterSuiteFunc = lambda *args: None
 
     def addTest(self, testFunc, testTags):
         self.testArray.append(testFunc)
@@ -24,6 +26,7 @@ class testSuite:
 
 testSuiteArray = []
 testSuiteArray.append(testSuite("firstTestSuite", "firstTestSuite"))
+testSuiteArray.append(testSuite("anotherTestSuite", "anotherTestSuite"))
 
 for ts in testSuiteArray:
     #print(type(ts))
@@ -56,19 +59,23 @@ for ts in testSuiteArray:
     def afterSuite(func):
         ts.afterSuiteFunc = func
     
-    for filename in sorted(os.listdir(ts.location)):
-        #print(filename)
+    # Import testSuite files
+    for filename in sorted(listdir(ts.location)):
+        #print("Found file: " + filename)
         if filename.endswith('.py'):
             exec(open(ts.location + "/" + filename).read())
+
+    #print(ts.testArray)
+    #print(ts.testTagArray)
     
     # Run the tests!
-    print("Running " + ts.name)
+    print("Running Suite: " + ts.name)
     ts.beforeSuiteFunc()
     for i in range(len(ts.testArray)):
         ts.beforeTestFunc()
     
         if "happypath" in ts.testTagArray[i]:
-            print("Running " + ts.testArray[i].__name__ + "...")
+            print("Running Test: " + ts.testArray[i].__name__, end='... ')
             result = ts.testArray[i]()
             if result == PASS:
                 print("PASSED!")
@@ -78,8 +85,6 @@ for ts in testSuiteArray:
                 print("Something has gone seriously wrong!")
     
         ts.afterTestFunc()
-    
+
+    print()
     ts.afterSuiteFunc()
-    
-    #print(ts.testArray)
-    #print(ts.testTagArray)
