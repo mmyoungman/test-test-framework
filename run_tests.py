@@ -23,26 +23,29 @@ for i in range(1, len(sys.argv)):
         for tag in tags.split(","):
             tagsExclude.append(tag)
 
-print(tagsInclude, tagsExclude)
-
 # Test result types
 PASS = 0
 FAIL = 1
+
+# Hack to record which file a test is found
+testLocation = ""
+
+class test_inst:
+    def __init__(self, func, location, tags=[], data=[]): 
+        self.func = func
+        self.location = location
+        self.tags = tags
+        self.data = data
 
 class testSuite:
     def __init__(self, suiteName, location):
         self.name = suiteName
         self.location = location
         self.testArray = []
-        self.testTagArray = []
         self.beforeSuiteFunc = lambda *args: None
         self.beforeTestFunc = lambda *args: None
         self.afterTestFunc = lambda *args: None
         self.afterSuiteFunc = lambda *args: None
-
-    def addTest(self, testFunc, testTags):
-        self.testArray.append(testFunc)
-        self.testTagArray.append(testTags)
 
 testSuiteArray = []
 testSuiteArray.append(testSuite("firstTestSuite", "firstTestSuite"))
@@ -59,10 +62,10 @@ for ts in testSuiteArray:
             if tags[0].__name__ == "test":
                 print("ERROR: Test function cannot be named \"test\"!")
                 sys.exit(1)
-            ts.addTest(tags[0], [])
+            ts.testArray.append(test_inst(tags[0], testLocation))
         else:
             def decorator(func):
-                ts.addTest(func, [tag for tag in tags])
+                ts.testArray.append(test_inst(func, testLocation, [tag for tag in tags]))
             return decorator
     
     # beforeSuite decorator
@@ -83,11 +86,11 @@ for ts in testSuiteArray:
     
     # Import testSuite files
     for filename in sorted(listdir(ts.location)):
-        #print("Found file: " + filename)
         if filename.endswith('.py'):
-            exec(open(ts.location + "/" + filename).read())
+            testLocation = ts.location + "/" + filename
+            exec(open(testLocation).read())
 
-    # Run the tests!
+    # Run the suite
     print("Running Suite: " + ts.name)
     ts.beforeSuiteFunc()
     for i in range(len(ts.testArray)):
@@ -96,27 +99,27 @@ for ts in testSuiteArray:
         skip = True
         if len(tagsInclude) == 0 or (len(tagsInclude) == 1 and tagsInclude[0] == ''):
             skip = False
-        for tag in ts.testTagArray[i]:
+        for tag in ts.testArray[i].tags:
             if tag in tagsInclude:
                 skip = False
-        for tag in ts.testTagArray[i]:
+        for tag in ts.testArray[i].tags:
             if tag in tagsExclude:
                 skip = True
                 break
 
         if not skip:
+            # Run the test
             ts.beforeTestFunc()
-    
-            print(("Running Test: " + ts.testArray[i].__name__).ljust(60, '.'), end='')
-            result = ts.testArray[i]()
+            print(("Running Test: " + ts.testArray[i].func.__name__).ljust(60, '.'), end='')
+            result = ts.testArray[i].func()
             if result == PASS:
                 print("\033[92mPASSED!\033[0m")
             elif result == FAIL:
                 print("\033[91mFAILED!\033[0m")
             else:
                 print("Something has gone seriously wrong!")
-    
+            print("Test found at: " + ts.testArray[i].location)
             ts.afterTestFunc()
 
-    print()
     ts.afterSuiteFunc()
+    print()
