@@ -1,3 +1,3 @@
-@test("happypath", "blah")
-def aTest():
+@test("happypath", "failing")
+def aTestHappy():
     return FAIL

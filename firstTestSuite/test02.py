@@ -1,5 +1,5 @@
-@test("happypath")
-def testTwo():
+@test("failing", "happypath")
+def testTwohappy():
     #print("testTwo prints this when it passes!")
-    return PASS
+    return FAIL
     #print("testTwo prints this when it fails!")

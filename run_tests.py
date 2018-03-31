@@ -2,13 +2,28 @@
 
 # TODO: 
 # Record test pass/fail data to produce a report
-# Make test runner include/exclude specified tags
 # Record from what file a test was imported, so easier to find when it fails
 # Have some way to run same test multiple times with different data?
 # Record how long each test runs?
 
 from os import listdir
-from sys import exit
+import sys
+
+tagsInclude = []
+tagsExclude = []
+
+# Handle arguments
+for i in range(1, len(sys.argv)):
+    if sys.argv[i].startswith("include="):
+        tags = sys.argv[i].split("=")[1]
+        for tag in tags.split(","):
+            tagsInclude.append(tag)
+    elif sys.argv[i].startswith("exclude="):
+        tags = sys.argv[i].split("=")[1]
+        for tag in tags.split(","):
+            tagsExclude.append(tag)
+
+print(tagsInclude, tagsExclude)
 
 # Test result types
 PASS = 0
@@ -35,12 +50,15 @@ testSuiteArray.append(testSuite("anotherTestSuite", "anotherTestSuite"))
 
 for ts in testSuiteArray:
     if not isinstance(ts, testSuite):
-        exit(1)
+        sys.exit(1)
 
     # test decorator
     def test(*tags):
         # If no test tags are specified, tags will be a test function
         if len(tags) == 1 and callable(tags[0]):
+            if tags[0].__name__ == "test":
+                print("ERROR: Test function cannot be named \"test\"!")
+                sys.exit(1)
             ts.addTest(tags[0], [])
         else:
             def decorator(func):
@@ -73,9 +91,22 @@ for ts in testSuiteArray:
     print("Running Suite: " + ts.name)
     ts.beforeSuiteFunc()
     for i in range(len(ts.testArray)):
-        ts.beforeTestFunc()
+
+        # Determine whether to skip current test
+        skip = True
+        if len(tagsInclude) == 0 or (len(tagsInclude) == 1 and tagsInclude[0] == ''):
+            skip = False
+        for tag in ts.testTagArray[i]:
+            if tag in tagsInclude:
+                skip = False
+        for tag in ts.testTagArray[i]:
+            if tag in tagsExclude:
+                skip = True
+                break
+
+        if not skip:
+            ts.beforeTestFunc()
     
-        if "happypath" in ts.testTagArray[i]:
             print(("Running Test: " + ts.testArray[i].__name__).ljust(60, '.'), end='')
             result = ts.testArray[i]()
             if result == PASS:
@@ -85,7 +116,7 @@ for ts in testSuiteArray:
             else:
                 print("Something has gone seriously wrong!")
     
-        ts.afterTestFunc()
+            ts.afterTestFunc()
 
     print()
     ts.afterSuiteFunc()
