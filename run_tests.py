@@ -10,21 +10,21 @@ class Result(Enum):
 
 class TestSuiteMetaClass(type):
     def __new__(cls, name, bases, body):
-        if not name == 'TestFramework':
-            if not 'run_test' in body:
-                raise TypeError("TestFramework subclasses must override "
-                                "'run_test'")
-            if '__init__' in body or 'main' in body:
-                raise TypeError("TestFramework subclasses may not override "
-                                "'__init__' or 'main'")
+        if not name == 'TestSuite':
+            if '__init__' in body:
+                raise TypeError("TestSuite subclasses may not override '__init__'")
+            if 'add_test' in body:
+                raise TypeError("TestSuite subclasses may not override 'add_test'")
+            if 'run_tests' in body:
+                raise TypeError("TestSuite subclasses may not override 'run_tests'")
         return super().__new__(cls, name, bases, body)
 
 class TestSuite(metaclass=TestSuiteMetaClass):
     def __init__(self):
-        pass
+        self.test_array = []
 
-    def main(self):
-        pass
+    def add_test(self, test_func):
+        self.test_array.append(test_func)
 
     def before_suite(self):
         pass
@@ -32,12 +32,19 @@ class TestSuite(metaclass=TestSuiteMetaClass):
     def before_test(self):
         pass
 
-    def run_tests(self):
-        """Tests must override this method to define test logic"""
-        raise NotImplementedError
-
     def after_test(self):
         pass
 
     def after_suite(self):
         pass
+
+    def run_tests(self):
+        self.before_suite()
+        for test_func in self.test_array:
+            self.before_test()
+            result = test_func()
+            self.after_test()
+        self.after_suite()
+
+if __name__ == '__main__':
+    print([test_suite.__name__ for test_suite in TestSuite.__subclasses__()])
