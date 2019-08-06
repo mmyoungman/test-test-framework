@@ -5,12 +5,21 @@ class SeleniumTestSuite(TestSuite):
     def before_suite(self):
         self.driver = webdriver.Chrome()
         self.driver.get("https://mark.youngman.info")
-        sleep(2)
 
     def after_suite(self):
         self.driver.close()
 
-    @TestSuite.test
-    def click_about_link():
+    def tests(self):
+        self.add_test(self.click_about_link)
+        self.add_test(self.click_aws_cert_link)
+
+    def click_about_link(self):
         self.driver.find_element_by_xpath('//a[text()="About"]').click()
-        sleep(10)
+        return Result.PASSED
+
+    def click_aws_cert_link(self):
+        self.driver.find_element_by_xpath('//a[text()="AWS Certified Developer - Associate"]').click()
+        sleep(3)
+        return Result.PASSED
+
+

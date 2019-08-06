@@ -24,25 +24,22 @@ class TestSuiteMetaClass(type):
                 raise TypeError("TestSuite subclasses may not override 'add_test'")
             if 'run_tests' in body:
                 raise TypeError("TestSuite subclasses may not override 'run_tests'")
+
+            if not 'tests' in body:
+                raise TypeError("TestSuite subclasses must override 'tests'")
+
         return super().__new__(cls, name, bases, body)
 
 class TestSuite(metaclass=TestSuiteMetaClass):
     def __init__(self):
-        self.test_array = []
+        self.tests_to_run = []
 
-    # test decorator
-    def test(func):
-        print('test decorator called')
-        test_inst = TestInstance(func)
-        #self.add_test(test_inst)
-
-    def add_test(test_inst):
-        print('add_test called')
+    def add_test(self, test_inst):
         # TODO(mark): Validate test_inst
-        if not isInstance(test_inst, TestInstance):
-            print(f'Cannot add test {test_inst} because it isn\'t a TestInstance object!')
-            sys.exit(1)
-        self.test_array.append(test_inst)
+        #if not isinstance(test_inst, TestInstance):
+        #    print(f'Cannot add test {test_inst} because it isn\'t a TestInstance object!')
+        #    sys.exit(1)
+        self.tests_to_run.append(test_inst)
 
     def before_suite(self):
         pass
@@ -56,13 +53,15 @@ class TestSuite(metaclass=TestSuiteMetaClass):
     def after_suite(self):
         pass
 
+    def tests(self):
+        raise NotImplementedError
+
     def run_tests(self):
+        self.tests()
         self.before_suite()
-        print('test_array: ', self.test_array)
-        for test_func in self.test_array:
+        for test_inst in self.tests_to_run:
             self.before_test()
-            print('test_func name: ', test_func.__name__)
-            result = test_func()
+            test_inst()
             self.after_test()
         self.after_suite()
 
