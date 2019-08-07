@@ -1,7 +1,5 @@
 # Created by Mark Youngman on 05 August 2019
-# Inspired by BitcoinTestFramework: https://github.com/bitcoin/bitcoin/blob/fa8a1d7ba30040f8c74f93fc41a61276c255a6a6/test/functional/test_framework/test_framework.py
 
-import sys
 from os import listdir
 from enum import Enum
 
@@ -10,36 +8,24 @@ class Result(Enum):
     FAILED = 1
     KNOWN_FAILURE = 2
 
-class TestInstance:
-    def __init__(self, func):
-        self.name = func.__name__
-        self.func = func
-
 class TestSuiteMetaClass(type):
     def __new__(cls, name, bases, body):
         if not name == 'TestSuite':
             if '__init__' in body:
                 raise TypeError("TestSuite subclasses may not override '__init__'")
-            if 'add_test' in body:
-                raise TypeError("TestSuite subclasses may not override 'add_test'")
             if 'run_tests' in body:
                 raise TypeError("TestSuite subclasses may not override 'run_tests'")
 
-            if not 'tests' in body:
-                raise TypeError("TestSuite subclasses must override 'tests'")
+            tests = filter(lambda name: name.startswith("test__"), body)
+            if list(tests) == []:
+                raise TypeError("TestSuite subclasses must include one "
+                                "method who's name starts with 'test__'")
 
         return super().__new__(cls, name, bases, body)
 
 class TestSuite(metaclass=TestSuiteMetaClass):
     def __init__(self):
         self.tests_to_run = []
-
-    def add_test(self, test_inst):
-        # TODO(mark): Validate test_inst
-        #if not isinstance(test_inst, TestInstance):
-        #    print(f'Cannot add test {test_inst} because it isn\'t a TestInstance object!')
-        #    sys.exit(1)
-        self.tests_to_run.append(test_inst)
 
     def before_suite(self):
         pass
@@ -53,16 +39,21 @@ class TestSuite(metaclass=TestSuiteMetaClass):
     def after_suite(self):
         pass
 
-    def tests(self):
-        raise NotImplementedError
-
     def run_tests(self):
-        self.tests()
+        method_name_list = dir(self)
+        is_test = lambda name: name.startswith("test__")
+        test_name_list = filter(is_test, method_name_list)
+        for name in test_name_list:
+            method = getattr(self, name)
+            self.tests_to_run.append(method)
+
         self.before_suite()
-        for test_inst in self.tests_to_run:
+
+        for test in self.tests_to_run:
             self.before_test()
-            test_inst()
+            test()
             self.after_test()
+
         self.after_suite()
 
 if __name__ == '__main__':
@@ -71,7 +62,6 @@ if __name__ == '__main__':
         if filename.endswith('.py'):
             exec(open(f'tests/{filename}').read())
 
-    print([test_suite.__name__ for test_suite in TestSuite.__subclasses__()])
-
     for test_suite in TestSuite.__subclasses__():
-        test_suite().run_tests()
+        test_suite_inst = test_suite()
+        test_suite_inst.run_tests()
