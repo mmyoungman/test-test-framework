@@ -17,5 +17,6 @@ class SeleniumTestSuite(TestSuite):
         self.driver \
             .find_element_by_xpath('//a[text()="AWS Certified Developer - Associate"]') \
             .click()
+        call_a_function_that_does_not_exist()
         sleep(3)
         return Result.PASSED

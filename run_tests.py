@@ -7,20 +7,15 @@ class Result(Enum):
     PASSED = 0
     FAILED = 1
     KNOWN_FAILURE = 2
+    TEST_ERROR = 3
 
 class TestSuiteMetaClass(type):
     def __new__(cls, name, bases, body):
-        if not name == 'TestSuite':
+        if name != 'TestSuite':
             if '__init__' in body:
                 raise TypeError("TestSuite subclasses may not override '__init__'")
             if 'run_tests' in body:
                 raise TypeError("TestSuite subclasses may not override 'run_tests'")
-
-            tests = filter(lambda name: name.startswith("test__"), body)
-            if list(tests) == []:
-                raise TypeError("TestSuite subclasses must include one "
-                                "method who's name starts with 'test__'")
-
         return super().__new__(cls, name, bases, body)
 
 class TestSuite(metaclass=TestSuiteMetaClass):
@@ -40,8 +35,10 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         pass
 
     def run_tests(self):
+        print('Running ' + self.__class__.__name__ + '...')
+
         method_name_list = dir(self)
-        is_test = lambda name: name.startswith("test__")
+        is_test = lambda name: name.startswith('test__')
         test_name_list = filter(is_test, method_name_list)
         for name in test_name_list:
             method = getattr(self, name)
@@ -51,7 +48,16 @@ class TestSuite(metaclass=TestSuiteMetaClass):
 
         for test in self.tests_to_run:
             self.before_test()
-            test()
+
+            try:
+                result = test()
+            except:
+                result = Result.TEST_ERROR
+
+            test_name = test.__name__[6:]
+            test_name_justified = test_name.ljust(60, '.')
+            print(test_name_justified + result.name + '!')
+
             self.after_test()
 
         self.after_suite()
@@ -60,7 +66,7 @@ if __name__ == '__main__':
     # Import tests
     for filename in listdir('tests'):
         if filename.endswith('.py'):
-            exec(open(f'tests/{filename}').read())
+            exec(open('tests/' + filename).read())
 
     for test_suite in TestSuite.__subclasses__():
         test_suite_inst = test_suite()
