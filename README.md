@@ -1,19 +1,25 @@
-Possible Test Framework Features
-================================
-
 Common failures of test frameworks:
-- Long run times.
-- Difficult to manage failures that cannot be quickly fixed.
-- Cannot get information on the ROI of particular tests.
+- Cannot get data on how well the test are performing
+- Dilemma of letting failing tests fail or to comment them out
 
-Parallelism: gives options to speed up test runs. Expect users to design tests with parallelism in mind.
-Extensible: easy to understand code makes the framework easy to extend to a user's specific needs.
-Lightweight: 
+### Framework doesn't have X feature
 
-* Record passes and failures over multiple runs of the all tests -- helps to identify tests that offer poor ROI.
+This framework aims to be lightweight and simple. Rather than trying to provide every conceivable feature, this framework is designed to be extended. This means that anyone with some python experience should be able to inspect the framework's code and implement functionality to suite their project's particular needs. 
 
-* A test must fail twice before it is marked as a failure -- guard against unreliable tests.
+### Long run times
 
-* More result types than pass and fail -- so a test can be "disabled" but still be run and provide information, even if it doesn't itself cause an entire test run to fail.
+This test framework aims to provide the ability to run tests in parallel by default. The user is trusted to make sure test suites can run independently.
 
-* Make parallelism easy to do.
+### No long-term record on the performance of tests
+
+Record results over all test runs -- help to identify tests that offer poor ROI. Perhaps users can also mark real failures and false positives to provide greater insights.
+
+### Don't let disabled tests be forgotten
+
+More result types than pass and fail -- so a test can be "disabled" but still be run and provide information, even if it doesn't itself cause an entire test run to fail.
+
+### Other potential features
+
+The aim is only to provide the bare essential features by default, but here are other features that could be implemented:
+
+- Rerun failed tests to protect against brittle tests.
