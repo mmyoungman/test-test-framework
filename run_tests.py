@@ -34,7 +34,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
     def after_suite(self):
         pass
 
-    def run_tests(self):
+    def run_tests(self, return_dict):
         print('Running ' + self.__class__.__name__ + '...')
 
         method_name_list = dir(self)
@@ -44,6 +44,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             method = getattr(self, name)
             self.tests_to_run.append(method)
 
+        results = []
         self.before_suite()
 
         for test in self.tests_to_run:
@@ -55,12 +56,16 @@ class TestSuite(metaclass=TestSuiteMetaClass):
                 result = Result.TEST_ERROR
 
             test_name = test.__name__[6:]
-            test_name_justified = test_name.ljust(60, '.')
+            results.append([test_name, result.name])
+
+            test_name_justified = (self.__class__.__name__ + ": " + test_name).ljust(60, '.')
             print(test_name_justified + result.name + '!')
 
             self.after_test()
 
         self.after_suite()
+        return_dict[self.__class__.__name__] = results
+        print('Finished ' + self.__class__.__name__)
 
 if __name__ == '__main__':
     # Import tests
@@ -68,6 +73,17 @@ if __name__ == '__main__':
         if filename.endswith('.py'):
             exec(open('tests/' + filename).read())
 
+    import multiprocessing as mp
+
+    processes = []
+    return_dict = mp.Manager().dict()
     for test_suite in TestSuite.__subclasses__():
-        test_suite_inst = test_suite()
-        test_suite_inst.run_tests()
+        processes.append(mp.Process(target=test_suite().run_tests, args=(return_dict,), name=test_suite.__name__))
+
+    for p in processes:
+        p.start()
+
+    for p in processes:
+        p.join()
+
+    print(return_dict)
