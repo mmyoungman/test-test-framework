@@ -74,16 +74,14 @@ if __name__ == '__main__':
             exec(open('tests/' + filename).read())
 
     import multiprocessing as mp
-
-    processes = []
+    pool = mp.Pool()
     return_dict = mp.Manager().dict()
+    workers = []
     for test_suite in TestSuite.__subclasses__():
-        processes.append(mp.Process(target=test_suite().run_tests, args=(return_dict,), name=test_suite.__name__))
+        res = pool.apply_async(test_suite().run_tests, args=(return_dict,))
+        workers.append(res)
 
-    for p in processes:
-        p.start()
-
-    for p in processes:
-        p.join()
+    for worker in workers:
+        worker.wait()
 
     print(return_dict)
