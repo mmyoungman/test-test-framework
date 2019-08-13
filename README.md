@@ -1,6 +1,4 @@
 Common failures of test frameworks:
-- Cannot get data on how well the test are performing
-- Dilemma of letting failing tests fail or to comment them out
 
 ### Framework doesn't have X feature
 
@@ -23,3 +21,10 @@ More result types than pass and fail -- so a test can be "disabled" but still be
 The aim is only to provide the bare essential features by default, but here are other features that could be implemented:
 
 - Rerun failed tests to protect against brittle tests.
+
+
+## To be implemented
+
+- Run script arguments
+- Logging of results
+- Produce report
