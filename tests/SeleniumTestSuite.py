@@ -10,7 +10,7 @@ class SeleniumTestSuite(TestSuite):
     def after_suite(self):
         self.driver.close()
 
-    #@TestSuite.tags('happypath')
+    @TestSuite.tags('happypath')
     def test__click_about_link(self):
         self.driver.find_element_by_xpath('//a[text()="About"]').click()
         return Result.PASSED
@@ -19,6 +19,6 @@ class SeleniumTestSuite(TestSuite):
         self.driver \
             .find_element_by_xpath('//a[text()="AWS Certified Developer - Associate"]') \
             .click()
-        call_a_function_that_does_not_exist()
-        sleep(3)
+        #call_a_function_that_does_not_exist()
+        #sleep(3)
         return Result.PASSED

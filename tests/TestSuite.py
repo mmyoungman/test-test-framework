@@ -21,12 +21,17 @@ class TestSuite(metaclass=TestSuiteMetaClass):
     def __init__(self):
         self.tests_to_run = []
         
-    #def tags(*args):
-    #    print("args: ", args)
-    #    def decorator(func):
-    #        func(self)
-    #    setattr(decorator, 'tags', [tag for tag in args])
-    #    return decorator
+    def tags(*args):
+        if len(args) == 1 and callable(args[0]):
+            args[0].tags = []
+            return args[0]
+        def decorator(func):
+            def wrapper(cls_instance):
+                return func(cls_instance)
+            wrapper.tags = [tag for tag in args]
+            wrapper.__name__ = func.__name__
+            return wrapper
+        return decorator
 
     def before_suite(self):
         pass
@@ -48,8 +53,8 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         test_name_list = filter(is_test, method_name_list)
         for name in test_name_list:
             method = getattr(self, name)
-            #if 'happypath' in method.tags:
-            #    continue
+            if hasattr(method, 'tags') and 'ignore' in method.tags:
+                continue
             self.tests_to_run.append(method)
 
         suite_results = []
@@ -62,7 +67,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
                 result = test()
             except Exception as e:
                 result = Result.TEST_ERROR
-                print(e)
+                print("Test exception: ", e)
 
             test_name = test.__name__[6:]
             suite_results.append([test_name, result.name])
