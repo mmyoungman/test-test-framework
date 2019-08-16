@@ -1,87 +1,47 @@
 # Created by Mark Youngman on 05 August 2019
 
 from os import listdir
-from enum import Enum
+import argparse
+from tests.TestSuite import TestSuite
+import importlib
 
-class Result(Enum):
-    PASSED = 0
-    FAILED = 1
-    KNOWN_FAILURE = 2
-    TEST_ERROR = 3
+parser = argparse.ArgumentParser(prog="python run_tests.py",
+                                 description="Runs test suites founds in the tests/ "
+                                 "directory")
+parser.add_argument("--suite",
+                    dest="suite",
+                    help="run a particular suite only")
+parser.add_argument("-t", "--tags",
+                    dest="tags",
+                    nargs="?",
+                    metavar="{tag(s)}",
+                    help="specify tests you wish to run by tag")
+args = parser.parse_args()
 
-class TestSuiteMetaClass(type):
-    def __new__(cls, name, bases, body):
-        if name != 'TestSuite':
-            if '__init__' in body:
-                raise TypeError("TestSuite subclasses may not override '__init__'")
-            if 'run_tests' in body:
-                raise TypeError("TestSuite subclasses may not override 'run_tests'")
-        return super().__new__(cls, name, bases, body)
 
-class TestSuite(metaclass=TestSuiteMetaClass):
-    def __init__(self):
-        self.tests_to_run = []
+# Import tests
+for filename in listdir('tests'):
+    if filename.endswith('.py') and filename not in ['__init__.py', 'TestSuite.py']:
+        filename = filename[:-3]
+        print("file: ", filename)
+        importlib.import_module('tests.' + filename)
 
-    def before_suite(self):
-        pass
+print("Subclasses: ", TestSuite.__subclasses__())
 
-    def before_test(self):
-        pass
+#for filename in listdir('tests'):
+#    if filename.endswith('.py'):
+#        exec(open('tests/' + filename).read())
 
-    def after_test(self):
-        pass
 
-    def after_suite(self):
-        pass
+import multiprocessing as mp
+pool = mp.Pool()
+results = mp.Manager().dict()
+workers = []
+for test_suite in TestSuite.__subclasses__():
+    res = pool.apply_async(test_suite().run_tests, args=(results,))
+    workers.append(res)
 
-    def run_tests(self, return_dict):
-        print('Running ' + self.__class__.__name__ + '...')
+for worker in workers:
+    worker.wait()
 
-        method_name_list = dir(self)
-        is_test = lambda name: name.startswith('test__')
-        test_name_list = filter(is_test, method_name_list)
-        for name in test_name_list:
-            method = getattr(self, name)
-            self.tests_to_run.append(method)
-
-        results = []
-        self.before_suite()
-
-        for test in self.tests_to_run:
-            self.before_test()
-
-            try:
-                result = test()
-            except:
-                result = Result.TEST_ERROR
-
-            test_name = test.__name__[6:]
-            results.append([test_name, result.name])
-
-            test_name_justified = (self.__class__.__name__ + ": " + test_name).ljust(60, '.')
-            print(test_name_justified + result.name + '!')
-
-            self.after_test()
-
-        self.after_suite()
-        return_dict[self.__class__.__name__] = results
-        print('Finished ' + self.__class__.__name__)
-
-if __name__ == '__main__':
-    # Import tests
-    for filename in listdir('tests'):
-        if filename.endswith('.py'):
-            exec(open('tests/' + filename).read())
-
-    import multiprocessing as mp
-    pool = mp.Pool()
-    return_dict = mp.Manager().dict()
-    workers = []
-    for test_suite in TestSuite.__subclasses__():
-        res = pool.apply_async(test_suite().run_tests, args=(return_dict,))
-        workers.append(res)
-
-    for worker in workers:
-        worker.wait()
-
-    print(return_dict)
+print(results)

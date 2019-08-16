@@ -1,5 +1,6 @@
 from selenium import webdriver
 from time import sleep
+from .TestSuite import *
 
 class SeleniumTestSuite2(TestSuite):
     def before_suite(self):

@@ -26,5 +26,10 @@ The aim is only to provide the bare essential features by default, but here are 
 ## To be implemented
 
 - Run script arguments
-- Logging of results
+- Include/Exclude tests with tags
+- Logging result and time of tests
 - Produce report
+
+## Can the framework accomodate these features easily?
+
+- Reduce timeout/wait of remaining suite tests on failure

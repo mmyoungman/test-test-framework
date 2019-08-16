@@ -1,2 +1,4 @@
 tags
 .idea/
+
+**/__pycache__

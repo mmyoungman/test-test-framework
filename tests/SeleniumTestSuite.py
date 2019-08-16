@@ -1,5 +1,6 @@
 from selenium import webdriver
 from time import sleep
+from .TestSuite import *
 
 class SeleniumTestSuite(TestSuite):
     def before_suite(self):
@@ -9,6 +10,7 @@ class SeleniumTestSuite(TestSuite):
     def after_suite(self):
         self.driver.close()
 
+    #@TestSuite.tags('happypath')
     def test__click_about_link(self):
         self.driver.find_element_by_xpath('//a[text()="About"]').click()
         return Result.PASSED
