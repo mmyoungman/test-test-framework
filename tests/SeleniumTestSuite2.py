@@ -1,5 +1,4 @@
 from selenium import webdriver
-from time import sleep
 from .TestSuite import *
 
 class SeleniumTestSuite2(TestSuite):
@@ -21,5 +20,4 @@ class SeleniumTestSuite2(TestSuite):
             .find_element_by_xpath('//a[text()="AWS Certified Developer - Associate"]') \
             .click()
         call_a_function_that_does_not_exist()
-        sleep(3)
         return Result.PASSED

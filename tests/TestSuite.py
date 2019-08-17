@@ -1,5 +1,3 @@
-# Created by Mark Youngman on 05 August 2019
-
 from enum import Enum
 
 class Result(Enum):
@@ -48,16 +46,33 @@ class TestSuite(metaclass=TestSuiteMetaClass):
     def after_suite(self):
         pass
 
-    def run_tests(self, results):
+    def run_tests(self, results, inc_tags=[], exc_tags=[]):
         print('Running ' + self.__class__.__name__ + '...')
 
         # Get tests to run
-        # TODO: Filter based on tags
         method_name_list = dir(self)
         for name in method_name_list:
             method = getattr(self, name)
             if hasattr(method, 'is_test'):
-                self.tests_to_run.append(method)
+                assert(hasattr(method, 'tags'))
+
+                # Skip tests to be excluded by tag
+                should_ignore = False
+                for method_tag in method.tags:
+                    if method_tag in exc_tags:
+                        should_ignore = True
+                        break
+                if should_ignore:
+                    continue
+
+                # Include tests to be included by tag
+                if inc_tags == []:
+                    self.tests_to_run.append(method)
+                else:
+                    for method_tag in method.tags:
+                        if method_tag in inc_tags:
+                            self.tests_to_run.append(method)
+                            break
 
         # Run the tests
         suite_results = []

@@ -11,12 +11,22 @@ parser = argparse.ArgumentParser(prog="python run_tests.py",
 parser.add_argument("--suite",
                     dest="suite",
                     help="run a particular suite only")
-parser.add_argument("-t", "--tags",
-                    dest="tags",
+parser.add_argument("--include",
+                    dest="inc_tags",
                     nargs="?",
+                    default='',
                     metavar="{tag(s)}",
-                    help="specify tests you wish to run by tag")
+                    help="specify tags of tests you wish to exclusively run, separated by commas")
+parser.add_argument("--exclude",
+                    dest="exc_tags",
+                    nargs="?",
+                    default='',
+                    metavar="{tag(s)}",
+                    help="specify tags of tests you wish to not run, separated by commas")
 args = parser.parse_args()
+
+args.inc_tags = [tag for tag in args.inc_tags.split(',')]
+args.exc_tags = [tag for tag in args.exc_tags.split(',')]
 
 # Import test suites
 for filename in listdir('tests'):
@@ -32,7 +42,7 @@ if args.suite:
     for test_suite in TestSuite.__subclasses__():
         if test_suite.__name__ == args.suite:
             results = {}
-            test_suite().run_tests(results)
+            test_suite().run_tests(results, inc_tags=args.inc_tags, exc_tags=args.exc_tags)
 else:
     import multiprocessing as mp
     pool = mp.Pool()
