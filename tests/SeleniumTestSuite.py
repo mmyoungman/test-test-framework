@@ -1,6 +1,7 @@
 from selenium import webdriver
 from .TestSuite import *
 
+
 class SeleniumTestSuite(TestSuite):
     def before_suite(self):
         self.driver = webdriver.Chrome()
@@ -21,3 +22,9 @@ class SeleniumTestSuite(TestSuite):
             .click()
         #call_a_function_that_does_not_exist()
         return Result.PASSED
+
+    @TestSuite.test('aaaa')
+    def test(self):
+        from time import sleep
+        sleep(1)
+        return Result.KNOWN_FAILURE

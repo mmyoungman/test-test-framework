@@ -28,9 +28,11 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         def decorator(func):
             def wrapper(cls_instance):
                 return func(cls_instance)
+            wrapper.__name__ = func.__name__
             wrapper.is_test = True
             wrapper.tags = [tag for tag in tags]
-            wrapper.__name__ = func.__name__
+            for tag in wrapper.tags:
+                assert isinstance(tag, str)
             return wrapper
         return decorator
 
@@ -54,7 +56,8 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         for name in method_name_list:
             method = getattr(self, name)
             if hasattr(method, 'is_test'):
-                assert(hasattr(method, 'tags'))
+                assert hasattr(method, 'tags')
+                print('method.tags', method.tags)
 
                 # Skip tests to be excluded by tag
                 should_ignore = False
@@ -86,6 +89,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             except Exception as e:
                 result = Result.TEST_ERROR
                 print("Test exception:", test.__name__, e)
+            assert isinstance(result, Result), test.__name__ + ' returned result should be type(Result)'
 
             suite_results.append([test.__name__, result.name])
 

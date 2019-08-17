@@ -35,12 +35,10 @@ args.exc_tags = [tag for tag in args.exc_tags.split(',') if tag != '']
 # Import test suites
 for filename in listdir('tests'):
     if filename.endswith('.py') and filename not in ['__init__.py', 'TestSuite.py']:
-        filename = filename[:-3]
-        importlib.import_module('tests.' + filename)
+        importlib.import_module('tests.' + filename[:-3])
 
 if args.suite:
-    if args.suite not in [suite.__name__ for suite in TestSuite.__subclasses__()]:
-        print("Invalid --suite argument specified")
+    assert args.suite in [suite.__name__ for suite in TestSuite.__subclasses__()]
     for test_suite in TestSuite.__subclasses__():
         if test_suite.__name__ == args.suite:
             results = {}
