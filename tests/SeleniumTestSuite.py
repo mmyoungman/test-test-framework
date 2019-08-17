@@ -9,7 +9,7 @@ class SeleniumTestSuite(TestSuite):
     def after_suite(self):
         self.driver.close()
 
-    @TestSuite.test('happypath')
+    @TestSuite.test('happypath', 'anothertag', 'andyetanothertag')
     def click_about_link(self):
         self.driver.find_element_by_xpath('//a[text()="About"]').click()
         return Result.PASSED
