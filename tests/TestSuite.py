@@ -21,14 +21,17 @@ class TestSuite(metaclass=TestSuiteMetaClass):
     def __init__(self):
         self.tests_to_run = []
         
-    def tags(*args):
-        if len(args) == 1 and callable(args[0]):
-            args[0].tags = []
-            return args[0]
+    def test(*tags):
+        # If no tags specified, tags variable contains the function being decorated!
+        if len(tags) == 1 and callable(tags[0]):
+            tags[0].is_test = True
+            tags[0].tags = []
+            return tags[0]
         def decorator(func):
             def wrapper(cls_instance):
                 return func(cls_instance)
-            wrapper.tags = [tag for tag in args]
+            wrapper.is_test = True
+            wrapper.tags = [tag for tag in tags]
             wrapper.__name__ = func.__name__
             return wrapper
         return decorator
@@ -48,15 +51,15 @@ class TestSuite(metaclass=TestSuiteMetaClass):
     def run_tests(self, results):
         print('Running ' + self.__class__.__name__ + '...')
 
+        # Get tests to run
+        # TODO: Filter based on tags
         method_name_list = dir(self)
-        is_test = lambda name: name.startswith('test__')
-        test_name_list = filter(is_test, method_name_list)
-        for name in test_name_list:
+        for name in method_name_list:
             method = getattr(self, name)
-            if hasattr(method, 'tags') and 'ignore' in method.tags:
-                continue
-            self.tests_to_run.append(method)
+            if hasattr(method, 'is_test'):
+                self.tests_to_run.append(method)
 
+        # Run the tests
         suite_results = []
         self.before_suite()
 
@@ -67,12 +70,11 @@ class TestSuite(metaclass=TestSuiteMetaClass):
                 result = test()
             except Exception as e:
                 result = Result.TEST_ERROR
-                print("Test exception: ", e)
+                print("Test exception:", test.__name__, e)
 
-            test_name = test.__name__[6:]
-            suite_results.append([test_name, result.name])
+            suite_results.append([test.__name__, result.name])
 
-            test_name_justified = (self.__class__.__name__ + ": " + test_name).ljust(60, '.')
+            test_name_justified = (self.__class__.__name__ + ": " + test.__name__).ljust(60, '.')
             print(test_name_justified + result.name + '!')
 
             self.after_test()

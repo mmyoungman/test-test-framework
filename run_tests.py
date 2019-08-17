@@ -28,7 +28,7 @@ print("Subclasses: ", TestSuite.__subclasses__())
 
 if args.suite:
     if args.suite not in [suite.__name__ for suite in TestSuite.__subclasses__()]:
-        print("Invalid --suite specified")
+        print("Invalid --suite argument specified")
     for test_suite in TestSuite.__subclasses__():
         if test_suite.__name__ == args.suite:
             results = {}

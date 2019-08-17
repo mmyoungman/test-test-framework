@@ -10,12 +10,13 @@ class SeleniumTestSuite(TestSuite):
     def after_suite(self):
         self.driver.close()
 
-    @TestSuite.tags('happypath')
-    def test__click_about_link(self):
+    @TestSuite.test('happypath')
+    def click_about_link(self):
         self.driver.find_element_by_xpath('//a[text()="About"]').click()
         return Result.PASSED
 
-    def test__click_aws_cert_link(self):
+    @TestSuite.test
+    def click_aws_cert_link(self):
         self.driver \
             .find_element_by_xpath('//a[text()="AWS Certified Developer - Associate"]') \
             .click()
