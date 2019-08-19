@@ -1,4 +1,5 @@
 from enum import Enum
+import timeit
 
 class Result(Enum):
     PASSED = 0
@@ -16,9 +17,14 @@ class TestSuiteMetaClass(type):
         return super().__new__(cls, name, bases, body)
 
 class TestSuite(metaclass=TestSuiteMetaClass):
-    def __init__(self):
+    def __init__(self, quiet):
         self.tests_to_run = []
-        
+
+        if quiet:
+            self.print = lambda *strs: None
+        else:
+            self.print = print
+
     def test(*tags):
         # If no tags specified, tags variable contains the function being decorated!
         if len(tags) == 1 and callable(tags[0]):
@@ -49,7 +55,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         pass
 
     def run_tests(self, results, inc_tags=[], exc_tags=[]):
-        print('Running ' + self.__class__.__name__ + '...')
+        self.print('Running ' + self.__class__.__name__ + '...')
 
         # Get tests to run
         method_name_list = dir(self)
@@ -57,7 +63,6 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             method = getattr(self, name)
             if hasattr(method, 'is_test'):
                 assert hasattr(method, 'tags')
-                print('method.tags', method.tags)
 
                 # Skip tests to be excluded by tag
                 should_ignore = False
@@ -85,19 +90,21 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             self.before_test()
 
             try:
+                start_time = timeit.default_timer()
                 result = test()
+                test_run_time = timeit.default_timer() - start_time
             except Exception as e:
                 result = Result.TEST_ERROR
-                print("Test exception:", test.__name__, e)
+                self.print("Test exception:", test.__name__, e)
             assert isinstance(result, Result), test.__name__ + ' returned result should be type(Result)'
 
-            suite_results.append([test.__name__, result.name])
+            suite_results.append([test.__name__, result, test_run_time])
 
             test_name_justified = (self.__class__.__name__ + ": " + test.__name__).ljust(60, '.')
-            print(test_name_justified + result.name + '!')
+            self.print(test_name_justified + result.name + '!')
 
             self.after_test()
 
         self.after_suite()
         results[self.__class__.__name__] = suite_results
-        print('Finished ' + self.__class__.__name__)
+        self.print('Finished ' + self.__class__.__name__)

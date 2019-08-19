@@ -1,8 +1,10 @@
 # Created by Mark Youngman on 05 August 2019
 
-from os import listdir
+from os import listdir, remove
 import argparse
 import importlib
+import cProfile
+import pstats
 from tests.TestSuite import TestSuite
 
 parser = argparse.ArgumentParser(prog="python run_tests.py",
@@ -27,6 +29,14 @@ parser.add_argument("--exclude",
                     default='',
                     metavar="{tag(s)}",
                     help="specify tags of tests you wish to not run, separated by commas")
+parser.add_argument("--profile",
+                    dest="profile",
+                    action="store_true",
+                    help="output profiling information")
+parser.add_argument("--quiet",
+                    dest="quiet",
+                    action="store_true",
+                    help="don't print to console")
 args = parser.parse_args()
 
 args.inc_tags = [tag for tag in args.inc_tags.split(',') if tag != '']
@@ -42,22 +52,46 @@ if args.suite:
     for test_suite in TestSuite.__subclasses__():
         if test_suite.__name__ == args.suite:
             results = {}
-            test_suite().run_tests(results,
-                                   inc_tags=args.inc_tags,
-                                   exc_tags=args.exc_tags)
-elif args.sync:
+            if args.profile:
+                cProfile.run('test_suite(args.quiet).run_tests(results, \
+                                       inc_tags=args.inc_tags,\
+                                       exc_tags=args.exc_tags)',
+                             'profile-data')
+                stream = open('test-results/python-profiling-' + test_suite.__name__ + '.log', 'w')
+                p = pstats.Stats('profile-data', stream=stream)
+                p.sort_stats('cumulative')
+                p.print_stats()
+                remove('profile-data')
+            else:
+                test_suite(args.quiet).run_tests(results,
+                                       inc_tags=args.inc_tags,
+                                       exc_tags=args.exc_tags)
+elif args.sync or args.profile:
     results = {}
     for test_suite in TestSuite.__subclasses__():
-        test_suite().run_tests(results,
-                               inc_tags=args.inc_tags,
-                               exc_tags=args.exc_tags)
+        if args.profile:
+            cProfile.run('test_suite(args.quiet).run_tests(results, \
+                                                 inc_tags=args.inc_tags,\
+                                                 exc_tags=args.exc_tags)',
+                         'profile-data')
+            stream = open('test-results/python-profiling-' + test_suite.__name__ + '.log', 'w')
+            p = pstats.Stats('profile-data', stream=stream)
+            p.sort_stats('cumulative')
+            p.print_stats()
+            remove('profile-data')
+            stream.close()
+        else:
+            test_suite(args.quiet).run_tests(results,
+                                   inc_tags=args.inc_tags,
+                                   exc_tags=args.exc_tags)
 else:
     import multiprocessing as mp
     pool = mp.Pool()
     results = mp.Manager().dict()
     workers = []
+
     for test_suite in TestSuite.__subclasses__():
-        res = pool.apply_async(test_suite().run_tests,
+        res = pool.apply_async(test_suite(args.quiet).run_tests,
                                args=(results,),
                                kwds={'inc_tags': args.inc_tags,
                                      'exc_tags': args.exc_tags})

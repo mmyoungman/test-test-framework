@@ -1,7 +1,6 @@
 from selenium import webdriver
 from .TestSuite import *
 
-
 class SeleniumTestSuite(TestSuite):
     def before_suite(self):
         self.driver = webdriver.Chrome()

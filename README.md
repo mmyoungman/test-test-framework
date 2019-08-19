@@ -25,11 +25,15 @@ The aim is only to provide the bare essential features by default, but here are 
 
 ## To be implemented
 
-- Run script arguments
-- Include/Exclude tests with tags
-- Logging result and time of tests
-- Produce report
+- run_tests arg determines whether outputs results to console
+- Logging result and time of tests and suites
+- change --suite to accept files and folders
+- Produce report - optionally to file or console?
+- Keeping all test run results for comparison
+- Figure out multiprocessing args.quiet bug
+- Can profile with multiprocessing
+- Profiling produces single file for multiple suites
 
-## Can the framework accomodate these features easily?
+## Can the framework accommodate these features easily?
 
 - Reduce timeout/wait of remaining suite tests on failure
