@@ -5,7 +5,7 @@ import argparse
 import importlib
 import cProfile
 import pstats
-from tests.TestSuite import TestSuite
+from tests.TestSuite import TestSuite, Result
 
 parser = argparse.ArgumentParser(prog="python run_tests.py",
                                  description="Runs test suites founds in the tests/ "
@@ -101,3 +101,29 @@ else:
         job.wait()
 
 print(results)
+
+def format_time(seconds):
+    minutes, seconds = divmod(seconds, 60)
+    return '{:0>2}:{:05.2f}'.format(int(minutes), seconds)
+
+# Console report
+print('\nREPORT TIME\n')
+for key in results.keys():
+    # Suite overall status
+    suite_result = Result.PASSED
+    for test in results[key]:
+        if test[1] is Result.FAILED:
+            suite_result = Result.FAILED
+            break
+        elif test[1] is Result.TEST_ERROR:
+            suite_result = Result.TEST_ERROR
+        elif test[1] is Result.KNOWN_FAILURE and suite_result is not Result.TEST_ERROR:
+            suite_result = Result.KNOWN_FAILURE
+    print('Suite: ' + key +
+          ' Overall result: ' + suite_result.name +
+          ' Overall time: ' + format_time(results[key]['time']))
+
+    # Suite test results
+    for test in results[key]['tests']:
+        print('Name: ' + test[0] + ' Result: ' + test[1].name + ' Time: ' + format_time(test[2]))
+    print()

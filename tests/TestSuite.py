@@ -20,9 +20,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         self.tests_to_run = []
 
         if quiet:
-            # INFO(mark): Cannot create an anonymous function, as then multiprocessing
-            # cannot pickle class instance!
-            self.print = self._do_nothing
+            self.print = self._do_nothing  # lambda here doesn't work with multiprocessing's pickling!
         else:
             self.print = print
 
@@ -30,15 +28,15 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         pass
 
     def test(*tags):
-        # If no tags specified, tags variable contains the function being decorated!
         if len(tags) == 1 and callable(tags[0]):
-            tags[0].is_test = True
-            tags[0].tags = []
-            return tags[0]
-        def decorator(func):
+            test_func = tags[0]
+            test_func.is_test = True
+            test_func.tags = []
+            return test_func
+        def decorator(test_func):
             def wrapper(cls_instance):
-                return func(cls_instance)
-            wrapper.__name__ = func.__name__
+                return test_func(cls_instance)
+            wrapper.__name__ = test_func.__name__
             wrapper.is_test = True
             wrapper.tags = [tag for tag in tags]
             for tag in wrapper.tags:
@@ -88,15 +86,16 @@ class TestSuite(metaclass=TestSuiteMetaClass):
 
         # Run the tests
         suite_results = []
+        suite_start_time = timeit.default_timer()
         self.before_suite()
 
         for test in self.tests_to_run:
             self.before_test()
 
             try:
-                start_time = timeit.default_timer()
+                test_start_time = timeit.default_timer()
                 result = test()
-                test_run_time = timeit.default_timer() - start_time
+                test_run_time = timeit.default_timer() - test_start_time
             except Exception as e:
                 result = Result.TEST_ERROR
                 self.print("Test exception:", test.__name__, e)
@@ -110,5 +109,9 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             self.after_test()
 
         self.after_suite()
-        results[self.__class__.__name__] = suite_results
+        suite_run_time = timeit.default_timer() - suite_start_time
+        results[self.__class__.__name__] = {
+            'time': suite_run_time,
+            'tests': suite_results
+        }
         self.print('Finished ' + self.__class__.__name__)
