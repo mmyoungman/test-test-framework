@@ -88,16 +88,16 @@ else:
     import multiprocessing as mp
     pool = mp.Pool()
     results = mp.Manager().dict()
-    workers = []
+    jobs = []
 
     for test_suite in TestSuite.__subclasses__():
         res = pool.apply_async(test_suite(args.quiet).run_tests,
                                args=(results,),
                                kwds={'inc_tags': args.inc_tags,
                                      'exc_tags': args.exc_tags})
-        workers.append(res)
+        jobs.append(res)
 
-    for worker in workers:
-        worker.wait()
+    for job in jobs:
+        job.wait()
 
 print(results)

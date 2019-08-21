@@ -10,10 +10,9 @@ class Result(Enum):
 class TestSuiteMetaClass(type):
     def __new__(cls, name, bases, body):
         if name != 'TestSuite':
-            if '__init__' in body:
-                raise TypeError("TestSuite subclasses may not override '__init__'")
-            if 'run_tests' in body:
-                raise TypeError("TestSuite subclasses may not override 'run_tests'")
+            for method_name in ['__init__', '_do_nothing', 'run_tests']:
+                if method_name in body:
+                    raise TypeError("TestSuite subclasses may not override '" + method_name + "'")
         return super().__new__(cls, name, bases, body)
 
 class TestSuite(metaclass=TestSuiteMetaClass):
@@ -21,6 +20,8 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         self.tests_to_run = []
 
         if quiet:
+            # INFO(mark): Cannot create an anonymous function, as then multiprocessing
+            # cannot pickle class instance!
             self.print = self._do_nothing
         else:
             self.print = print

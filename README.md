@@ -30,7 +30,6 @@ The aim is only to provide the bare essential features by default, but here are 
 - change --suite to accept files and folders
 - Produce report - optionally to file or console?
 - Keeping all test run results for comparison
-- Figure out multiprocessing args.quiet bug
 - Can profile with multiprocessing
 - Profiling produces single file for multiple suites
 
