@@ -21,9 +21,12 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         self.tests_to_run = []
 
         if quiet:
-            self.print = lambda *strs: None
+            self.print = self._do_nothing
         else:
             self.print = print
+
+    def _do_nothing(self, *args):
+        pass
 
     def test(*tags):
         # If no tags specified, tags variable contains the function being decorated!
