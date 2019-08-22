@@ -105,6 +105,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         suite_start_time = timeit.default_timer()
 
         # Run the tests
+        assert len(self.tests_to_run) > 0
         self.before_suite()
 
         for test in self.tests_to_run:

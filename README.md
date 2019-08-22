@@ -22,7 +22,6 @@ The aim is only to provide the bare essential features by default, but here are 
 
 - Rerun failed tests to protect against brittle tests.
 
-
 ## To be implemented
 
 - Logging result and time of tests and suites

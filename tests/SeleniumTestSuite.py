@@ -20,6 +20,7 @@ class SeleniumTestSuite(TestSuite):
             .find_element_by_xpath('//a[text()="AWS Certified Developer - Associate"]') \
             .click()
         #call_a_function_that_does_not_exist()
+        # return 'boom!'
         return Result.PASSED
 
     @TestSuite.test('aaaa')

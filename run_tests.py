@@ -13,20 +13,19 @@ parser = argparse.ArgumentParser(prog="python run_tests.py",
 parser.add_argument("--file",
                     dest="file",
                     default="tests/",
-                    help="run a particular suite only")
+                    metavar="{file/dir}",
+                    help="run a particular test suite or test suites within a directory")
 parser.add_argument("--sync",
                     dest="sync",
                     action="store_true",
                     help="run test suites synchronously")
 parser.add_argument("--include",
                     dest="inc_tags",
-                    nargs="?",
                     default='',
                     metavar="{tag(s)}",
                     help="specify tags of tests you wish to exclusively run, separated by commas")
 parser.add_argument("--exclude",
                     dest="exc_tags",
-                    nargs="?",
                     default='',
                     metavar="{tag(s)}",
                     help="specify tags of tests you wish to not run, separated by commas")
@@ -55,7 +54,7 @@ def filepath_to_import_str(filepath):
 assert path.exists(args.file)
 if path.isfile(args.file):
     assert args.file.endswith('.py')
-    assert args.file is not '__init__.py' and args.file is not 'TestSuite.py'
+    assert args.file not in ['__init__.py', 'TestSuite.py']
     importlib.import_module(filepath_to_import_str(args.file))
 elif path.isdir(args.file):
     from glob import glob
@@ -76,7 +75,7 @@ if args.profile:
         p.print_stats()
         remove('profile-data')
         stream.close()
-elif args.sync:
+elif args.sync or len(TestSuite.__subclasses__()) == 1:
     results = {}
     for test_suite in TestSuite.__subclasses__():
         test_suite(args.quiet).run_tests(results,
