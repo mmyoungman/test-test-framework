@@ -25,13 +25,12 @@ The aim is only to provide the bare essential features by default, but here are 
 
 ## To be implemented
 
-- run_tests arg determines whether outputs results to console
 - Logging result and time of tests and suites
-- change --suite to accept files and folders
 - Produce report - optionally to file or console?
 - Keeping all test run results for comparison
 - Can profile with multiprocessing
 - Profiling produces single file for multiple suites
+- further develop --quiet?
 
 ## Can the framework accommodate these features easily?
 
