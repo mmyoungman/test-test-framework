@@ -10,7 +10,8 @@ class Result(Enum):
 class TestSuiteMetaClass(type):
     def __new__(cls, name, bases, body):
         if name != 'TestSuite':
-            for method_name in ['__init__', '_do_nothing', 'run_tests']:
+            for method_name in ['__init__', 'run_tests', '_do_nothing',
+                                '_format_time', '_update_suite_result']:
                 if method_name in body:
                     raise TypeError("TestSuite subclasses may not override '" + method_name + "'")
         return super().__new__(cls, name, bases, body)
@@ -20,7 +21,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         self.tests_to_run = []
 
         if quiet:
-            self.print = self._do_nothing  # lambda here doesn't work with multiprocessing's pickling!
+            self.print = self._do_nothing  # no lambda because of multiprocessing's pickling!
         else:
             self.print = print
 
@@ -84,34 +85,53 @@ class TestSuite(metaclass=TestSuiteMetaClass):
                             self.tests_to_run.append(method)
                             break
 
-        # Run the tests
+        # Test run prep
+        def _update_suite_result(current, result):
+            if current is Result.FAILED or result is Result.FAILED:
+                return Result.FAILED
+            elif result is Result.TEST_ERROR:
+                return Result.TEST_ERROR
+            elif result is Result.KNOWN_FAILURE and current is not Result.TEST_ERROR:
+                return Result.KNOWN_FAILURE
+            else:
+                return Result.PASSED
+
+        def _format_time(seconds):
+            minutes, seconds = divmod(seconds, 60)
+            return '{:0>2}:{:05.2f}'.format(int(minutes), seconds)
+
+        suite_overall_result = Result.PASSED
         suite_results = []
         suite_start_time = timeit.default_timer()
+
+        # Run the tests
         self.before_suite()
 
         for test in self.tests_to_run:
             self.before_test()
 
+            test_start_time = timeit.default_timer()
             try:
-                test_start_time = timeit.default_timer()
-                result = test()
-                test_run_time = timeit.default_timer() - test_start_time
+                test_result = test()
             except Exception as e:
-                result = Result.TEST_ERROR
+                test_result = Result.TEST_ERROR
                 self.print("Test exception:", test.__name__, e)
-            assert isinstance(result, Result), test.__name__ + ' returned result should be type(Result)'
+            test_run_time = timeit.default_timer() - test_start_time
+            assert isinstance(test_result, Result), test.__name__ + ' returned result should be type(Result)'
 
-            suite_results.append([test.__name__, result, test_run_time])
+            suite_results.append([test.__name__, test_result, _format_time(test_run_time)])
+            suite_overall_result = _update_suite_result(suite_overall_result, test_result)
 
             test_name_justified = (self.__class__.__name__ + ": " + test.__name__).ljust(60, '.')
-            self.print(test_name_justified + result.name + '!')
+            self.print(test_name_justified + test_result.name + '!')
 
             self.after_test()
 
         self.after_suite()
         suite_run_time = timeit.default_timer() - suite_start_time
         results[self.__class__.__name__] = {
-            'time': suite_run_time,
-            'tests': suite_results
+            'time': _format_time(suite_run_time),
+            'tests': suite_results,
+            'result': suite_overall_result
         }
         self.print('Finished ' + self.__class__.__name__)

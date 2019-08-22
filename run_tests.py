@@ -1,6 +1,6 @@
 # Created by Mark Youngman on 05 August 2019
 
-from os import listdir, remove
+from os import path, makedirs, listdir, remove
 import argparse
 import importlib
 import cProfile
@@ -42,7 +42,9 @@ args = parser.parse_args()
 args.inc_tags = [tag for tag in args.inc_tags.split(',') if tag != '']
 args.exc_tags = [tag for tag in args.exc_tags.split(',') if tag != '']
 
-# Import test suites
+if not path.exists('test-results/'):
+    makedirs('test-results/')
+
 for filename in listdir('tests'):
     if filename.endswith('.py') and filename not in ['__init__.py', 'TestSuite.py']:
         importlib.import_module('tests.' + filename[:-3])
@@ -100,30 +102,13 @@ else:
     for job in jobs:
         job.wait()
 
-print(results)
-
-def format_time(seconds):
-    minutes, seconds = divmod(seconds, 60)
-    return '{:0>2}:{:05.2f}'.format(int(minutes), seconds)
-
-# Console report
 print('\nREPORT TIME\n')
-for key in results.keys():
-    # Suite overall status
-    suite_result = Result.PASSED
-    for test in results[key]:
-        if test[1] is Result.FAILED:
-            suite_result = Result.FAILED
-            break
-        elif test[1] is Result.TEST_ERROR:
-            suite_result = Result.TEST_ERROR
-        elif test[1] is Result.KNOWN_FAILURE and suite_result is not Result.TEST_ERROR:
-            suite_result = Result.KNOWN_FAILURE
-    print('Suite: ' + key +
-          ' Overall result: ' + suite_result.name +
-          ' Overall time: ' + format_time(results[key]['time']))
-
-    # Suite test results
-    for test in results[key]['tests']:
-        print('Name: ' + test[0] + ' Result: ' + test[1].name + ' Time: ' + format_time(test[2]))
+for suite_name, suite_dict in results.items():
+    print('Suite: ' + suite_name +
+          ' Overall result: ' + suite_dict['result'].name +
+          ' Overall time: ' + suite_dict['time'])
+    for test in suite_dict['tests']:
+        print('Name: ' + test[0] +
+              ' Result: ' + test[1].name +
+              ' Time: ' + test[2])
     print()
