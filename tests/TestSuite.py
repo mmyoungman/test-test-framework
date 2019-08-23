@@ -98,7 +98,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
 
         def _format_time(seconds):
             minutes, seconds = divmod(seconds, 60)
-            return '{:0>2}:{:05.2f}'.format(int(minutes), seconds)
+            return f'{int(minutes):0>2}:{seconds:0>6.3f}'
 
         suite_overall_result = Result.PASSED
         suite_results = []

@@ -27,7 +27,6 @@ The aim is only to provide the bare essential features by default, but here are 
 - Logging result and time of tests and suites
 - Produce report - optionally to file or console?
 - Keeping all test run results for comparison
-- Can profile with multiprocessing
 - Profiling produces single file for multiple suites
 - further develop --quiet?
 
