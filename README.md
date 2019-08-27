@@ -24,11 +24,12 @@ The aim is only to provide the bare essential features by default, but here are 
 
 ## To be implemented
 
-- Logging result and time of tests and suites
-- Produce report - optionally to file or console?
+- Produce html report - optionally to file or console?
+- Improve xunit report - check format of time, actual failure messages, etc.
 - Keeping all test run results for comparison
-- Profiling produces single file for multiple suites
+- run_tests.py should return appropriate code depends on results
 - further develop --quiet?
+- Profiling produces single file for multiple suites
 
 ## Can the framework accommodate these features easily?
 

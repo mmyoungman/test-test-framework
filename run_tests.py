@@ -7,7 +7,7 @@ import importlib
 import cProfile
 import pstats
 import multiprocessing as mp
-from tests.TestSuite import TestSuite
+from tests.TestSuite import TestSuite, Result
 
 parser = argparse.ArgumentParser(prog="python run_tests.py",
                                  description="Runs test suites founds in the tests/ "
@@ -60,7 +60,7 @@ if path.isfile(args.file):
     assert args.file.endswith('.py')
     assert args.file not in ['__init__.py', 'TestSuite.py']
     importlib.import_module(file_path_to_import_str(args.file))
-elif path.isdir(args.file):
+else:  # isdir
     files = [y for x in walk(args.file) for y in glob(path.join(x[0], '*.py'))]
     for file_path in files:
         importlib.import_module(file_path_to_import_str(file_path))
@@ -104,7 +104,10 @@ else:
         job.wait()
 
 print('\nREPORT TIME\n')
+assert isinstance(results, dict) or isinstance(results, mp.managers.DictProxy)
+assert results, "results shouldn't be empty"
 
+# Print to result to console
 for suite_name, suite_dict in results.items():
     print('Suite: ' + suite_name +
           ' Overall result: ' + suite_dict['result'].name +
@@ -114,3 +117,22 @@ for suite_name, suite_dict in results.items():
               ' Result: ' + test[1].name +
               ' Time: ' + test[2])
     print()
+
+# Produce xunit.xml
+text = """<?xml version="1.0" encoding="UTF-8"?>
+"""
+for suite_name, suite_dict in results.items():
+    text += f"""<testsuite classname="{suite_name}" tests="{suite_dict['count'][0]}" 
+                           errors="{suite_dict['count'][4]}" failures="{suite_dict['count'][2]}" 
+                           skipped="0" time="{suite_dict['time']}">\n"""
+    for test in suite_dict['tests']:
+        text += f"""<testcase classname="{suite_name} - {test[0]}" name="{test[0]}" time="{test[2]}">\n"""
+        if test[1] in [Result.FAILED, Result.TEST_ERROR]:
+            text += """<failure message="test failed" type="AssertionError"></failure>\n"""
+        text += "</testcase>\n"
+    text += "</testsuite>\n"
+
+text_file = open("test-results/xunit.xml", "w")
+text_file.write(text)
+text_file.close()
+

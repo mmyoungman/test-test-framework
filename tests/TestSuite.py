@@ -96,6 +96,20 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             else:
                 return Result.PASSED
 
+        def _results_count(new_result, result_list):
+            result_list[0] += 1
+            if new_result is Result.PASSED:
+                result_list[1] += 1
+            elif new_result is Result.FAILED:
+                result_list[2] += 1
+            elif new_result is Result.KNOWN_FAILURE:
+                result_list[3] += 1
+            elif new_result is Result.TEST_ERROR:
+                result_list[4] += 1
+            else:
+                assert False, "new_result isn't a supported Result type!"
+            return result_list
+
         def _format_time(seconds):
             minutes, seconds = divmod(seconds, 60)
             return f'{int(minutes):0>2}:{seconds:0>6.3f}'
@@ -103,6 +117,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         suite_overall_result = Result.PASSED
         suite_results = []
         suite_start_time = timeit.default_timer()
+        suite_result_count = [0, 0, 0, 0, 0]
 
         # Run the tests
         assert len(self.tests_to_run) > 0
@@ -122,6 +137,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
 
             suite_results.append([test.__name__, test_result, _format_time(test_run_time)])
             suite_overall_result = _update_suite_result(suite_overall_result, test_result)
+            suite_result_count = _results_count(test_result, suite_result_count)
 
             test_name_justified = (self.__class__.__name__ + ": " + test.__name__).ljust(60, '.')
             self.print(test_name_justified + test_result.name + '!')
@@ -133,6 +149,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         results[self.__class__.__name__] = {
             'time': _format_time(suite_run_time),
             'tests': suite_results,
-            'result': suite_overall_result
+            'result': suite_overall_result,
+            'count': suite_result_count
         }
         self.print('Finished ' + self.__class__.__name__)
