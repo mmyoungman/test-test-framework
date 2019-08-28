@@ -24,8 +24,9 @@ The aim is only to provide the bare essential features by default, but here are 
 
 ## To be implemented
 
-- Produce html report - optionally to file or console?
+- Produce html report
 - Improve xunit report - check format of time, actual failure messages, etc.
+- Change results['tests'] to a list of dicts not a list of lists, for clarity
 - Keeping all test run results for comparison
 - run_tests.py should return appropriate code depends on results
 - further develop --quiet?

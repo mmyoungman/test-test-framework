@@ -34,16 +34,14 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             test_func.is_test = True
             test_func.tags = []
             return test_func
-        def decorator(test_func):
-            def wrapper(cls_instance):
-                return test_func(cls_instance)
-            wrapper.__name__ = test_func.__name__
-            wrapper.is_test = True
-            wrapper.tags = [tag for tag in tags]
-            for tag in wrapper.tags:
+        else:
+            for tag in tags:
                 assert isinstance(tag, str)
-            return wrapper
-        return decorator
+            def decorator(test_func):
+                test_func.is_test = True
+                test_func.tags = [tag for tag in tags]
+                return test_func
+            return decorator
 
     def before_suite(self):
         pass
@@ -135,7 +133,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             test_run_time = timeit.default_timer() - test_start_time
             assert isinstance(test_result, Result), test.__name__ + ' returned result should be type(Result)'
 
-            suite_results.append([test.__name__, test_result, _format_time(test_run_time)])
+            suite_results.append([test.__name__, test_result, _format_time(test_run_time), test.tags])
             suite_overall_result = _update_suite_result(suite_overall_result, test_result)
             suite_result_count = _results_count(test_result, suite_result_count)
 

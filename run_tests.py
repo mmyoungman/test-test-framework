@@ -103,6 +103,7 @@ else:
     for job in jobs:
         job.wait()
 
+
 print('\nREPORT TIME\n')
 assert isinstance(results, dict) or isinstance(results, mp.managers.DictProxy)
 assert results, "results shouldn't be empty"
