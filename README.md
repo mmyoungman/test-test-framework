@@ -16,13 +16,13 @@ Record results over all test runs -- help to identify tests that needlessly exte
 
 More result types than pass and fail, so a test can be still run and provide information, even if it doesn't cause an entire test suite to fail. Real failures aren't lost amongst false positives.
 
-## To be implemented
+## To do
 
-- Produce html report
-- Improve xunit report - check format of time, actual failure messages, etc.
-- Change results['tests'] to a list of dicts not a list of lists, for clarity
 - Keeping all test run results for comparison
 - run_tests.py should return appropriate code depends on results
 - further develop --quiet?
-- Profiling produces single file for multiple suites
 - Rerun failed tests to protect against brittle tests?
+- Profiling produces single file for multiple suites
+- Improve html report
+- Improve xunit report - check format of time, actual failure messages, etc.
+- Test framework against a real project

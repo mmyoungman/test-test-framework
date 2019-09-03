@@ -133,9 +133,14 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             test_run_time = timeit.default_timer() - test_start_time
             assert isinstance(test_result, Result), test.__name__ + ' returned result should be type(Result)'
 
-            suite_results.append([test.__name__, test_result, _format_time(test_run_time), test.tags])
             suite_overall_result = _update_suite_result(suite_overall_result, test_result)
             suite_result_count = _results_count(test_result, suite_result_count)
+            suite_results.append({
+                'name': test.__name__,
+                'result': test_result,
+                'time': _format_time(test_run_time),
+                'tags': test.tags,
+            })
 
             test_name_justified = (self.__class__.__name__ + ": " + test.__name__).ljust(60, '.')
             self.print(test_name_justified + test_result.name + '!')
@@ -148,6 +153,8 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             'time': _format_time(suite_run_time),
             'tests': suite_results,
             'result': suite_overall_result,
-            'count': suite_result_count
+            'count': suite_result_count,
+            'inc_tags': inc_tags,
+            'exc_tags': exc_tags
         }
         self.print('Finished ' + self.__class__.__name__)

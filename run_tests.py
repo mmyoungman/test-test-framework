@@ -112,28 +112,73 @@ assert results, "results shouldn't be empty"
 for suite_name, suite_dict in results.items():
     print('Suite: ' + suite_name +
           ' Overall result: ' + suite_dict['result'].name +
-          ' Overall time: ' + suite_dict['time'])
+          ' Overall time: ' + suite_dict['time'] +
+          ' Overall count: ' + str(suite_dict['count']) +
+          ' Inc tags: ' + str(suite_dict['inc_tags']) +
+          ' Exc tags: ' + str(suite_dict['exc_tags']))
     for test in suite_dict['tests']:
-        print('Name: ' + test[0] +
-              ' Result: ' + test[1].name +
-              ' Time: ' + test[2])
+        print('Name: ' + test['name'] +
+              ' Result: ' + test['result'].name +
+              ' Time: ' + test['time'] +
+              ' Tags: ' + str(test['tags']))
     print()
 
 # Produce xunit.xml
 text = """<?xml version="1.0" encoding="UTF-8"?>
 """
 for suite_name, suite_dict in results.items():
-    text += f"""<testsuite classname="{suite_name}" tests="{suite_dict['count'][0]}" 
-                           errors="{suite_dict['count'][4]}" failures="{suite_dict['count'][2]}" 
+    text += f"""<testsuite classname="{suite_name}" tests="{suite_dict['count'][0]}"
+                           errors="{suite_dict['count'][4]}" failures="{suite_dict['count'][2]}"
                            skipped="0" time="{suite_dict['time']}">\n"""
     for test in suite_dict['tests']:
-        text += f"""<testcase classname="{suite_name} - {test[0]}" name="{test[0]}" time="{test[2]}">\n"""
-        if test[1] in [Result.FAILED, Result.TEST_ERROR]:
+        text += f"""<testcase classname="{suite_name} - {test['name']}" name="{test['name']}" time="{test['time']}">\n"""
+        if test['result'] in [Result.FAILED, Result.TEST_ERROR]:
             text += """<failure message="test failed" type="AssertionError"></failure>\n"""
         text += "</testcase>\n"
     text += "</testsuite>\n"
 
 text_file = open("test-results/xunit.xml", "w")
+text_file.write(text)
+text_file.close()
+
+# Produce html report
+text = """<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Test test framework report</title>
+    </head>
+    <body>
+        <h1>Test Test Framework Report</h1>
+"""
+for suite_name, suite_dict in results.items():
+    text += f"""
+        <h2>{suite_name}</h2>
+        <p>Result: {suite_dict['result'].name}</p>
+        <p>Time: {suite_dict['time']}</p>
+        <table>
+            <tr>
+               <th>Test name</th> 
+               <th>Result</th> 
+               <th>Time</th> 
+               <th>Tags</th> 
+            </tr>"""
+    for test in suite_dict['tests']:
+        text += f"""
+            <tr>
+                <td>{test['name']}</td>
+                <td>{test['result'].name}</td>
+                <td>{test['time']}</td>
+                <td>{str(test['tags'])}</td>
+            </tr>"""
+    text += """
+        </table>"""
+
+text += """
+    </body>
+</html>"""
+
+text_file = open("test-results/report.html", "w")
 text_file.write(text)
 text_file.close()
 
