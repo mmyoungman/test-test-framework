@@ -127,8 +127,8 @@ for suite_name, suite_dict in results.items():
 text = """<?xml version="1.0" encoding="UTF-8"?>
 """
 for suite_name, suite_dict in results.items():
-    text += f"""<testsuite classname="{suite_name}" tests="{suite_dict['count'][0]}"
-                           errors="{suite_dict['count'][4]}" failures="{suite_dict['count'][2]}"
+    text += f"""<testsuite classname="{suite_name}" tests="{suite_dict['count']['TOTAL']}"
+                           errors="{suite_dict['count'][Result.TEST_ERROR]}" failures="{suite_dict['count'][Result.FAILED]}"
                            skipped="0" time="{suite_dict['time']}">\n"""
     for test in suite_dict['tests']:
         text += f"""<testcase classname="{suite_name} - {test['name']}" name="{test['name']}" time="{test['time']}">\n"""
@@ -156,6 +156,11 @@ for suite_name, suite_dict in results.items():
         <h2>{suite_name}</h2>
         <p>Result: {suite_dict['result'].name}</p>
         <p>Time: {suite_dict['time']}</p>
+        <p>Test Count: {suite_dict['count']['TOTAL']}</p>
+        <p>PASSED: {suite_dict['count'][Result.PASSED]}</p>
+        <p>FAILED: {suite_dict['count'][Result.FAILED]}</p>
+        <p>KNOWN_FAILURE: {suite_dict['count'][Result.KNOWN_FAILURE]}</p>
+        <p>TEST_ERROR: {suite_dict['count'][Result.TEST_ERROR]}</p>
         <table>
             <tr>
                <th>Test name</th> 
@@ -181,4 +186,3 @@ text += """
 text_file = open("test-results/report.html", "w")
 text_file.write(text)
 text_file.close()
-

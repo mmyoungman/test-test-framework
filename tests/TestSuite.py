@@ -94,19 +94,10 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             else:
                 return Result.PASSED
 
-        def _results_count(new_result, result_list):
-            result_list[0] += 1
-            if new_result is Result.PASSED:
-                result_list[1] += 1
-            elif new_result is Result.FAILED:
-                result_list[2] += 1
-            elif new_result is Result.KNOWN_FAILURE:
-                result_list[3] += 1
-            elif new_result is Result.TEST_ERROR:
-                result_list[4] += 1
-            else:
-                assert False, "new_result isn't a supported Result type!"
-            return result_list
+        def _update_results_count(new_result, result_dict):
+            result_dict['TOTAL'] += 1
+            result_dict[new_result] += 1
+            return result_dict
 
         def _format_time(seconds):
             minutes, seconds = divmod(seconds, 60)
@@ -115,7 +106,13 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         suite_overall_result = Result.PASSED
         suite_results = []
         suite_start_time = timeit.default_timer()
-        suite_result_count = [0, 0, 0, 0, 0]
+        suite_result_count = {
+            'TOTAL': 0,
+            Result.PASSED: 0,
+            Result.FAILED: 0,
+            Result.KNOWN_FAILURE: 0,
+            Result.TEST_ERROR: 0,
+        }
 
         # Run the tests
         assert len(self.tests_to_run) > 0
@@ -134,7 +131,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             assert isinstance(test_result, Result), test.__name__ + ' returned result should be type(Result)'
 
             suite_overall_result = _update_suite_result(suite_overall_result, test_result)
-            suite_result_count = _results_count(test_result, suite_result_count)
+            suite_result_count = _update_results_count(test_result, suite_result_count)
             suite_results.append({
                 'name': test.__name__,
                 'result': test_result,
@@ -155,6 +152,6 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             'result': suite_overall_result,
             'count': suite_result_count,
             'inc_tags': inc_tags,
-            'exc_tags': exc_tags
+            'exc_tags': exc_tags,
         }
         self.print('Finished ' + self.__class__.__name__)
