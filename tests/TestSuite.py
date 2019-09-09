@@ -10,8 +10,7 @@ class Result(Enum):
 class TestSuiteMetaClass(type):
     def __new__(cls, name, bases, body):
         if name != 'TestSuite':
-            for method_name in ['__init__', 'run_tests', '_do_nothing',
-                                '_format_time', '_update_suite_result']:
+            for method_name in ['__init__', 'run_tests', 'quiet_print']:
                 if method_name in body:
                     raise TypeError("TestSuite subclasses may not override '" + method_name + "'")
         return super().__new__(cls, name, bases, body)
@@ -21,11 +20,11 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         self.tests_to_run = []
 
         if quiet:
-            self.print = self._do_nothing  # no lambda because of multiprocessing's pickling!
+            self.print = self.quiet_print  # no lambda because of multiprocessing's pickling!
         else:
             self.print = print
 
-    def _do_nothing(self, *args):
+    def quiet_print(self, *args):
         pass
 
     def test(*tags):
@@ -94,11 +93,6 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             else:
                 return Result.PASSED
 
-        def _update_results_count(new_result, result_dict):
-            result_dict['TOTAL'] += 1
-            result_dict[new_result] += 1
-            return result_dict
-
         def _format_time(seconds):
             minutes, seconds = divmod(seconds, 60)
             return f'{int(minutes):0>2}:{seconds:0>6.3f}'
@@ -131,7 +125,8 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             assert isinstance(test_result, Result), test.__name__ + ' returned result should be type(Result)'
 
             suite_overall_result = _update_suite_result(suite_overall_result, test_result)
-            suite_result_count = _update_results_count(test_result, suite_result_count)
+            suite_result_count['TOTAL'] += 1
+            suite_result_count[test_result] += 1
             suite_results.append({
                 'name': test.__name__,
                 'result': test_result,

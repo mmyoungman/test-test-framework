@@ -128,10 +128,12 @@ text = """<?xml version="1.0" encoding="UTF-8"?>
 """
 for suite_name, suite_dict in results.items():
     text += f"""<testsuite classname="{suite_name}" tests="{suite_dict['count']['TOTAL']}"
-                           errors="{suite_dict['count'][Result.TEST_ERROR]}" failures="{suite_dict['count'][Result.FAILED]}"
+                           errors="{suite_dict['count'][Result.TEST_ERROR]}"
+                           failures="{suite_dict['count'][Result.FAILED]}"
                            skipped="0" time="{suite_dict['time']}">\n"""
     for test in suite_dict['tests']:
-        text += f"""<testcase classname="{suite_name} - {test['name']}" name="{test['name']}" time="{test['time']}">\n"""
+        text += f"""<testcase classname="{suite_name} - {test['name']}"
+                              name="{test['name']}" time="{test['time']}">\n"""
         if test['result'] in [Result.FAILED, Result.TEST_ERROR]:
             text += """<failure message="test failed" type="AssertionError"></failure>\n"""
         text += "</testcase>\n"
@@ -163,10 +165,10 @@ for suite_name, suite_dict in results.items():
         <p>TEST_ERROR: {suite_dict['count'][Result.TEST_ERROR]}</p>
         <table>
             <tr>
-               <th>Test name</th> 
-               <th>Result</th> 
-               <th>Time</th> 
-               <th>Tags</th> 
+               <th>Test name</th>
+               <th>Result</th>
+               <th>Time</th>
+               <th>Tags</th>
             </tr>"""
     for test in suite_dict['tests']:
         text += f"""
@@ -186,3 +188,66 @@ text += """
 text_file = open("test-results/report.html", "w")
 text_file.write(text)
 text_file.close()
+
+# Save test run to sqlite db
+import sqlite3
+con = sqlite3.connect('database.db')
+cursor = con.cursor()
+cursor.execute("""create table if not exists testRuns(
+                    id integer primary key,
+                    runDate text
+                    );""")
+con.commit()
+
+cursor.execute("""create table if not exists suites(
+                id integer primary key,
+                testRunId integer,
+                result char(50),
+                time text,
+                count integer,
+                countPASSED integer,
+                countFAILED integer,
+                countKNOWN_FAILURE integer,
+                countTEST_ERROR integer,
+                inc_tags text,
+                exc_tags text
+                );""")
+con.commit()
+
+cursor.execute("""create table if not exists tests(
+                id integer primary key,
+                suiteId integer,
+                result char(50),
+                time text,
+                tags text
+                );""")
+con.commit()
+
+import datetime
+cursor.execute(f'insert into testRuns (runDate) values ("{datetime.datetime.now()}");')
+con.commit()
+
+runID = cursor.lastrowid
+
+for suite_name, suite_dict in results.items():
+    cursor.execute(f'''insert into suites
+                    (testRunId, result, time, count, inc_tags, exc_tags)
+                    values
+                    (
+                        {runID},
+                        "{suite_dict['result'].name}",
+                        "{suite_dict['time']}",
+                        {str(suite_dict['count']['TOTAL'])},
+                        "{str(suite_dict['inc_tags'])}",
+                        "{str(suite_dict['exc_tags'])}"
+                    );''')
+    suiteID = cursor.lastrowid
+    for test in suite_dict['tests']:
+        cursor.execute(f'''insert into tests (suiteId, result, time, tags) values
+                        (
+                            {suiteID},
+                            "{test['result'].name}",
+                            "{test['time']}",
+                            "{str(test['tags'])}"
+                        );''')
+con.commit()

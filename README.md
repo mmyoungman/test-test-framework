@@ -18,11 +18,12 @@ More result types than pass and fail, so a test can be still run and provide inf
 
 ## To do
 
-- Keeping all test run results for comparison
+- Pass back suite/test runtime as real rather than str
 - run_tests.py should return appropriate code depends on results
 - further develop --quiet?
 - Rerun failed tests to protect against brittle tests?
 - Profiling produces single file for multiple suites
 - Improve html report
 - Improve xunit report - check format of time, actual failure messages, etc.
-- Test framework against a real project
+- Improve and clean up database.db creation/insert stuff
+- Test the framework against a real project
