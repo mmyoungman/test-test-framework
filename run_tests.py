@@ -1,7 +1,6 @@
 # Created by Mark Youngman on 05 August 2019
 
-from os import path, makedirs, remove, walk
-from glob import glob
+import os
 import argparse
 import importlib
 import cProfile
@@ -44,24 +43,25 @@ args = parser.parse_args()
 args.inc_tags = [tag for tag in args.inc_tags.split(',') if tag != '']
 args.exc_tags = [tag for tag in args.exc_tags.split(',') if tag != '']
 
-if not path.exists('test-results/'):
-    makedirs('test-results/')
+if not os.path.exists('test-results/'):
+    os.makedirs('test-results/')
 
 
 def file_path_to_import_str(file_path):
     assert file_path.endswith('.py')
     file_path = file_path[:-3]
-    import_str = file_path.replace(path.sep, '.')
+    import_str = file_path.replace(os.path.sep, '.')
     return import_str
 
 
-assert path.exists(args.file)
-if path.isfile(args.file):
+assert os.path.exists(args.file)
+if os.path.isfile(args.file):
     assert args.file.endswith('.py')
     assert args.file not in ['__init__.py', 'TestSuite.py']
     importlib.import_module(file_path_to_import_str(args.file))
 else:  # isdir
-    files = [y for x in walk(args.file) for y in glob(path.join(x[0], '*.py'))]
+    files = [root + file_name for root, _, files in os.walk(args.file)
+             for file_name in files if file_name.endswith('.py')]
     for file_path in files:
         importlib.import_module(file_path_to_import_str(file_path))
 
@@ -80,7 +80,7 @@ def run_suite(suite, args, results):
         p = pstats.Stats(f'profile-data-{suite.__name__}', stream=stream)
         p.sort_stats('cumulative')
         p.print_stats()
-        remove(f'profile-data-{suite.__name__}')
+        os.remove(f'profile-data-{suite.__name__}')
         stream.close()
     else:
         suite(args.quiet).run_tests(results,

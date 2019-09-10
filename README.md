@@ -18,7 +18,8 @@ More result types than pass and fail, so a test can be still run and provide inf
 
 ## To do
 
-- run_tests.py should return appropriate code depends on results
+- get overall test run results (i.e. worst result of suite runs)
+- run_tests.py should return appropriate code depends on results -- necessary for CI pipelines?
 - further develop --quiet?
 - Rerun failed tests to protect against brittle tests?
 - Profiling produces single file for multiple suites
