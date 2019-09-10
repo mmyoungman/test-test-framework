@@ -20,7 +20,8 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         self.tests_to_run = []
 
         if quiet:
-            self.print = self.quiet_print  # no lambda because of multiprocessing's pickling!
+            # NOTE(mark): Can't use lambda here because of multiprocessing's pickling!
+            self.print = self.quiet_print
         else:
             self.print = print
 

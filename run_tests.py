@@ -46,7 +46,7 @@ args.exc_tags = [tag for tag in args.exc_tags.split(',') if tag != '']
 if not os.path.exists('test-results/'):
     os.makedirs('test-results/')
 
-
+# Import test suites
 def file_path_to_import_str(file_path):
     assert file_path.endswith('.py')
     file_path = file_path[:-3]
@@ -67,7 +67,7 @@ else:  # isdir
 
 assert len(TestSuite.__subclasses__()) > 0, 'There should be a test suite to run!'
 
-
+# Run test suites
 def run_suite(suite, args, results):
     if args.profile:
         cProfile.runctx('suite(args.quiet).run_tests(results, \
@@ -103,11 +103,8 @@ else:
     for job in jobs:
         job.wait()
 
-
-print('\nREPORT TIME\n')
 assert isinstance(results, dict) or isinstance(results, mp.managers.DictProxy)
 assert results, "results shouldn't be empty"
-
 
 def _format_time(seconds):
     minutes, seconds = divmod(float(seconds), 60)
@@ -135,10 +132,10 @@ for suite_name, suite_dict in results.items():
     text += f"""<testsuite classname="{suite_name}" tests="{suite_dict['count']['TOTAL']}"
                            errors="{suite_dict['count'][Result.TEST_ERROR]}"
                            failures="{suite_dict['count'][Result.FAILED]}"
-                           skipped="0" time="{_format_time(suite_dict['time'])}">\n"""
+                           skipped="0" time="{suite_dict['time']}">\n"""
     for test in suite_dict['tests']:
         text += f"""<testcase classname="{suite_name} - {test['name']}"
-                              name="{test['name']}" time="{_format_time(test['time'])}">\n"""
+                              name="{test['name']}" time="{test['time']}">\n"""
         if test['result'] in [Result.FAILED, Result.TEST_ERROR]:
             text += """<failure message="test failed" type="AssertionError"></failure>\n"""
         text += "</testcase>\n"
