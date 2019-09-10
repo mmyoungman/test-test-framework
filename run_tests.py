@@ -108,18 +108,23 @@ print('\nREPORT TIME\n')
 assert isinstance(results, dict) or isinstance(results, mp.managers.DictProxy)
 assert results, "results shouldn't be empty"
 
+
+def _format_time(seconds):
+    minutes, seconds = divmod(float(seconds), 60)
+    return f'{int(minutes):0>2}:{seconds:0>6.3f}'
+
 # Print to result to console
 for suite_name, suite_dict in results.items():
     print('Suite: ' + suite_name +
           ' Overall result: ' + suite_dict['result'].name +
-          ' Overall time: ' + suite_dict['time'] +
+          ' Overall time: ' + _format_time(suite_dict['time']) +
           ' Overall count: ' + str(suite_dict['count']) +
           ' Inc tags: ' + str(suite_dict['inc_tags']) +
           ' Exc tags: ' + str(suite_dict['exc_tags']))
     for test in suite_dict['tests']:
         print('Name: ' + test['name'] +
               ' Result: ' + test['result'].name +
-              ' Time: ' + test['time'] +
+              ' Time: ' + _format_time(test['time']) +
               ' Tags: ' + str(test['tags']))
     print()
 
@@ -130,10 +135,10 @@ for suite_name, suite_dict in results.items():
     text += f"""<testsuite classname="{suite_name}" tests="{suite_dict['count']['TOTAL']}"
                            errors="{suite_dict['count'][Result.TEST_ERROR]}"
                            failures="{suite_dict['count'][Result.FAILED]}"
-                           skipped="0" time="{suite_dict['time']}">\n"""
+                           skipped="0" time="{_format_time(suite_dict['time'])}">\n"""
     for test in suite_dict['tests']:
         text += f"""<testcase classname="{suite_name} - {test['name']}"
-                              name="{test['name']}" time="{test['time']}">\n"""
+                              name="{test['name']}" time="{_format_time(test['time'])}">\n"""
         if test['result'] in [Result.FAILED, Result.TEST_ERROR]:
             text += """<failure message="test failed" type="AssertionError"></failure>\n"""
         text += "</testcase>\n"
@@ -157,7 +162,7 @@ for suite_name, suite_dict in results.items():
     text += f"""
         <h2>{suite_name}</h2>
         <p>Result: {suite_dict['result'].name}</p>
-        <p>Time: {suite_dict['time']}</p>
+        <p>Time: {_format_time(suite_dict['time'])}</p>
         <p>Test Count: {suite_dict['count']['TOTAL']}</p>
         <p>PASSED: {suite_dict['count'][Result.PASSED]}</p>
         <p>FAILED: {suite_dict['count'][Result.FAILED]}</p>
@@ -175,7 +180,7 @@ for suite_name, suite_dict in results.items():
             <tr>
                 <td>{test['name']}</td>
                 <td>{test['result'].name}</td>
-                <td>{test['time']}</td>
+                <td>{_format_time(test['time'])}</td>
                 <td>{str(test['tags'])}</td>
             </tr>"""
     text += """

@@ -93,10 +93,6 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             else:
                 return Result.PASSED
 
-        def _format_time(seconds):
-            minutes, seconds = divmod(seconds, 60)
-            return f'{int(minutes):0>2}:{seconds:0>6.3f}'
-
         suite_overall_result = Result.PASSED
         suite_results = []
         suite_start_time = timeit.default_timer()
@@ -130,7 +126,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
             suite_results.append({
                 'name': test.__name__,
                 'result': test_result,
-                'time': _format_time(test_run_time),
+                'time': test_run_time,
                 'tags': test.tags,
             })
 
@@ -142,7 +138,7 @@ class TestSuite(metaclass=TestSuiteMetaClass):
         self.after_suite()
         suite_run_time = timeit.default_timer() - suite_start_time
         results[self.__class__.__name__] = {
-            'time': _format_time(suite_run_time),
+            'time': suite_run_time,
             'tests': suite_results,
             'result': suite_overall_result,
             'count': suite_result_count,
